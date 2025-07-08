@@ -32,7 +32,6 @@ export default class EmailInvitePlugin extends AdminForthPlugin {
       throw new Error('Auth configuration is required for email invite plugin');
     }
 
-    // find field with name resourceConfig.emailField in adminforth.auth.usersResourceId and show error if it doesn't exist
     const authResource = adminforth.config.resources.find(r => r.resourceId === adminforth.config.auth!.usersResourceId);
     if (!authResource) {
       throw new Error(`Resource with id config.auth.usersResourceId=${adminforth.config.auth!.usersResourceId} not found`);
@@ -49,7 +48,6 @@ export default class EmailInvitePlugin extends AdminForthPlugin {
     }
     this.emailField = emailField;
 
-    // Check for email confirmation field if specified
     if (this.options.emailConfirmedField) {
       const emailConfirmedField = authResource.columns.find(f => f.name === this.options.emailConfirmedField);
       if (!emailConfirmedField) {
@@ -62,7 +60,6 @@ export default class EmailInvitePlugin extends AdminForthPlugin {
       this.emailConfirmedField = emailConfirmedField;
     }
 
-    // Add hooks to handle user creation and invitation email
     if (!authResource.hooks) {
       authResource.hooks = {};
     }
@@ -70,7 +67,6 @@ export default class EmailInvitePlugin extends AdminForthPlugin {
       authResource.hooks.create = {};
     }
     
-    // Add beforeSave hook to handle password field
     if (!authResource.hooks.create.beforeSave) {
       authResource.hooks.create.beforeSave = [];
     }
@@ -79,7 +75,6 @@ export default class EmailInvitePlugin extends AdminForthPlugin {
     }
     authResource.hooks.create.beforeSave.push(this.handleUserCreation.bind(this));
 
-    // Add afterSave hook to send invitation email
     if (!authResource.hooks.create.afterSave) {
       authResource.hooks.create.afterSave = [];
     }
@@ -88,7 +83,6 @@ export default class EmailInvitePlugin extends AdminForthPlugin {
     }
     authResource.hooks.create.afterSave.push(this.sendInviteEmail.bind(this));
 
-    // Add custom page for setting password
     adminforth.config.customization.customPages.push({
       path: '/set-password',
       component: { 
@@ -102,7 +96,6 @@ export default class EmailInvitePlugin extends AdminForthPlugin {
   }
   
   validateConfigAfterDiscover(adminforth: IAdminForth, resourceConfig: AdminForthResource) {
-    // Validate the email adapter
     this.options.adapter.validate();
   }
 
@@ -123,12 +116,9 @@ export default class EmailInvitePlugin extends AdminForthPlugin {
         delete record.password;
       }
 
-      // Set password_hash to a temporary placeholder (users will set password via email invite)
       const passwordHashFieldName = adminforth.config.auth!.passwordHashField;
-      // Generate a placeholder hash that will be replaced when user sets their password
       record[passwordHashFieldName] = await AdminForth.Utils.generatePasswordHash('TEMP_INVITE_PLACEHOLDER_' + Date.now());
 
-      // Set email as unconfirmed if email confirmation is enabled
       if (this.options.emailConfirmedField && this.emailConfirmedField) {
         record[this.emailConfirmedField.name] = false;
       }
@@ -158,7 +148,6 @@ export default class EmailInvitePlugin extends AdminForthPlugin {
 
       const brandName = adminforth.config.customization.brandName || 'Admin Panel';
       
-             // Generate invite token
        const inviteToken = adminforth.auth.issueJWT(
          { email, recordId, inviteEmail: true }, 
          'inviteUser', 
@@ -168,12 +157,10 @@ export default class EmailInvitePlugin extends AdminForthPlugin {
        console.log('Sending invite email to:', email);
        console.log('Generated JWT token payload:', { email, recordId, inviteEmail: true });
 
-             // Build invite URL
        const host = extra?.headers?.host || 'localhost';
        const protocol = extra?.headers?.['x-forwarded-proto'] || 'http';
        const inviteUrl = `${protocol}://${host}/set-password?token=${inviteToken}`;
 
-       // Prepare email content
        const emailSubject = `You're invited to ${brandName}`;
        const emailText = `
          Dear user,
@@ -222,7 +209,7 @@ export default class EmailInvitePlugin extends AdminForthPlugin {
       return { ok: true };
     } catch (error) {
       console.error('Error sending invite email:', error);
-      return { ok: true }; // Don't fail user creation for email issues
+      return { ok: true };
     }
   }
 
@@ -239,18 +226,14 @@ export default class EmailInvitePlugin extends AdminForthPlugin {
           if (!decoded || !decoded.inviteEmail) {
             return { error: 'Invalid or expired invitation token', ok: false };
           }
-
-          console.log('Decoded JWT token:', decoded);
           const { email, recordId } = decoded;
 
-          // Find the user record - try by recordId first, then by email as fallback
           let userRecord;
           
           if (recordId) {
             userRecord = await this.adminforth.resource(this.authResource.resourceId).get(recordId);
           }
           
-          // If not found by recordId or recordId is missing, try finding by email
           if (!userRecord && email) {
             const records = await this.adminforth.resource(this.authResource.resourceId).list(
               Filters.EQ(this.options.emailField, email),
@@ -263,35 +246,27 @@ export default class EmailInvitePlugin extends AdminForthPlugin {
             return { error: 'User not found', ok: false };
           }
 
-          // Verify email matches (case-insensitive comparison)
           const userEmail = userRecord[this.options.emailField];
           const tokenEmail = email;
-          
-          console.log('Email verification - User record email:', userEmail, 'Token email:', tokenEmail);
           
           if (!userEmail || userEmail.toLowerCase() !== tokenEmail.toLowerCase()) {
             return { error: 'Email mismatch', ok: false };
           }
 
-          // Hash the password
           const passwordHashFieldName = this.adminforth.config.auth.passwordHashField;
           const newPasswordHash = await AdminForth.Utils.generatePasswordHash(password);
           
-          // Get the primary key value for the user record
           const primaryKeyField = this.authResource.columns.find(c => c.primaryKey);
           const userRecordId = userRecord[primaryKeyField!.name];
           
-          // Prepare update object
           const updateData: any = { 
             [passwordHashFieldName]: newPasswordHash 
           };
 
-          // Mark email as confirmed if email confirmation is enabled
           if (this.options.emailConfirmedField && this.emailConfirmedField) {
             updateData[this.emailConfirmedField.name] = true;
           }
           
-          // Update the user with the password hash and email confirmation
           await this.adminforth.resource(this.authResource.resourceId).update(userRecordId, updateData);
 
           console.log('Password set successfully for user:', email);
