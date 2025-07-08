@@ -1,0 +1,53 @@
+{
+  "name": "@adminforth/email-invite",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "homepage": "https://adminforth.dev/docs/tutorial/Plugins/EmailInvite/",
+  "scripts": {
+    "build": "tsc && rsync -av --exclude 'node_modules' custom dist/ && npm version patch",
+    "prepare": "npm link adminforth"
+  },
+  "keywords": [
+    "adminforth",
+    "email",
+    "invite"
+  ],
+  "author": "devforth",
+  "license": "MIT",
+  "description": "Email invite plugin for adminforth",
+  "devDependencies": {
+    "@types/node": "^22.10.7",
+    "semantic-release": "^24.2.1",
+    "semantic-release-slack-bot": "^4.0.2",
+    "typescript": "^5.7.3"
+  },
+  "dependencies": {
+    "adminforth": "latest"
+  },
+  "release": {
+    "plugins": [
+      "@semantic-release/commit-analyzer",
+      "@semantic-release/release-notes-generator",
+      "@semantic-release/npm",
+      "@semantic-release/github",
+      [
+        "semantic-release-slack-bot",
+        {
+          "notifyOnSuccess": true,
+          "notifyOnFail": true,
+          "slackIcon": ":package:",
+          "markdownReleaseNotes": true
+        }
+      ]
+    ],
+    "branches": [
+      "main",
+      {
+        "name": "next",
+        "prerelease": true
+      }
+    ]
+  }
+}
