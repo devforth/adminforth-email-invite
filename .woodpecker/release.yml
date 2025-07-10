@@ -15,13 +15,13 @@ steps:
         from_secret: VAULT_TOKEN
     commands:
       - infisical export --domain https://vault.devforth.io/api --format=dotenv-export --env="prod" > /woodpecker/deploy.vault.env
-    secrets:
-      - VAULT_TOKEN
 
   release:
     image: node:20
     when:
       - event: push
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     commands:
       - apt update && apt install -y rsync
       - export $(cat /woodpecker/deploy.vault.env | xargs)
@@ -34,7 +34,6 @@ steps:
     when:
       - event: push
         status: [failure, success]
-      - event: push
     image: curlimages/curl
     commands:
       - export $(cat /woodpecker/deploy.vault.env | xargs)
