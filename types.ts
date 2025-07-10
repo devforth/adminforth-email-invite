@@ -13,6 +13,11 @@ export interface PluginOptions {
   sendFrom: string;
 
   /**
+   * Field name in auth resource which contains password
+   */
+  passwordField: string;
+
+  /**
    * Email adapter to use for sending emails
    */
   adapter: EmailAdapter;

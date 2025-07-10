@@ -48,6 +48,19 @@ export default class EmailInvitePlugin extends AdminForthPlugin {
     }
     this.emailField = emailField;
 
+    if (!this.options.passwordField) {
+      throw new Error(`passwordField is required to get password constraints and should be a name of virtual field in auth resource`);
+    }
+
+    const passwordField = authResource.columns.find(f => f.name === this.options.passwordField);
+    if (!passwordField) {
+      const similar = suggestIfTypo(authResource.columns.map(f => f.name), this.options.passwordField);
+
+      throw new Error(`Field with name ${this.options.passwordField} not found in resource ${authResource.resourceId}.
+        ${similar ? `Did you mean ${similar}?` : ''}
+      `);
+    }
+
     if (this.options.emailConfirmedField) {
       const emailConfirmedField = authResource.columns.find(f => f.name === this.options.emailConfirmedField);
       if (!emailConfirmedField) {
@@ -89,7 +102,12 @@ export default class EmailInvitePlugin extends AdminForthPlugin {
         file: this.componentPath('SetPassword.vue'), 
         meta: { 
           customLayout: true, 
-          pluginInstanceId: this.pluginInstanceId
+          pluginInstanceId: this.pluginInstanceId,
+          passwordField: {
+            minLength: passwordField.minLength,
+            maxLength: passwordField.maxLength,
+            validation: passwordField.validation
+          }
         }
       }
     });

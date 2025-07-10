@@ -174,20 +174,36 @@ const backgroundPosition = computed(() => {
   return coreStore.config?.loginBackgroundPosition || '1/2';
 });
 
+const passwordField = computed(
+  () => route.meta.passwordField
+)
+
+
 function checkPassword() {
-  if (!password.value || !passwordConfirmation.value) {
-    return 'Please enter both password and password confirmation';
-  }
-  if (password.value !== passwordConfirmation.value) {
-    return 'Passwords do not match';
-  }
 
-  // Basic password validation
-  if (password.value.length < 8) {
-    return 'Password must be at least 8 characters long';
-  }
+if (!password.value || !passwordConfirmation.value) {
+  return 'Please enter both password and password confirmation';
+}
+if (password.value !== passwordConfirmation.value) {
+  return 'Passwords do not match';
+}
 
-  return null;
+if (password.value.length < passwordField.value.minLength) {
+  return `Password must be at least ${passwordField.value.minLength} characters long`;
+}
+
+if (password.value.length > passwordField.value.maxLength) {
+  return `Password must be at most ${passwordField.value.maxLength} characters long`;
+}
+
+if (passwordField.value.validation) {
+  const valError = applyRegexValidation(password.value, passwordField.value.validation);
+  if (valError) {
+    return valError;
+  }
+}
+
+return null;
 }
 
 const validationError = computed(() => {
