@@ -6,7 +6,7 @@
   "type": "module",
   "homepage": "https://adminforth.dev/docs/tutorial/Plugins/EmailInvite/",
   "scripts": {
-    "build": "tsc && rsync -av --exclude 'node_modules' custom dist/ && npm version patch",
+    "build": "tsc && rsync -av --exclude 'node_modules' custom dist/",
     "prepare": "npm link adminforth"
   },
   "keywords": [
