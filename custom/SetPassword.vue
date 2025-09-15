@@ -23,7 +23,7 @@
 
     <!-- Main modal -->
     <div id="authentication-modal" tabindex="-1" 
-      class="overflow-y-auto flex flex-grow
+      class="af-set-password-modal overflow-y-auto flex flex-grow
       overflow-x-hidden z-50 min-w-[350px]  justify-center items-center md:inset-0 h-[calc(100%-1rem)] max-h-full">
         <div class="relative p-4 w-full max-h-full max-w-[400px]">
             <!-- Modal content -->
