@@ -37,7 +37,7 @@
                 <!-- Modal body -->
                 <div class="p-4 md:p-5">
                   <!-- Success message -->
-                  <div v-if="passwordSet" class="flex items-center justify-center p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-green-800 dark:text-green-400" role="alert">
+                  <div v-if="passwordSet" class="af-alert-success flex items-center justify-center p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-green-800 dark:text-green-400" role="alert">
                     <div class="text-center">
                       <p class="mb-3">{{$t('Password set successfully!')}}</p>
                       <Link to="/login" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
