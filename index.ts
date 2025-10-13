@@ -259,11 +259,13 @@ export default class EmailInvitePlugin extends AdminForthPlugin {
             );
             userRecord = records.length > 0 ? records[0] : null;
           }
-          
           if (!userRecord) {
             return { error: 'User not found', ok: false };
           }
 
+          if ( userRecord[this.options.emailConfirmedField] ) {
+            return { error: 'Password already set. Invitation link cannot be reused.', ok: false };
+          }
           const userEmail = userRecord[this.options.emailField];
           const tokenEmail = email;
           
