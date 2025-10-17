@@ -101,7 +101,7 @@ export default class EmailInvitePlugin extends AdminForthPlugin {
       component: { 
         file: this.componentPath('SetPassword.vue'), 
         meta: { 
-          customLayout: true, 
+          sidebarAndHeader: "none",
           pluginInstanceId: this.pluginInstanceId,
           passwordField: {
             minLength: passwordField.minLength,
