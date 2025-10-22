@@ -38,7 +38,15 @@
                 <div class="p-4 md:p-5">
                   <!-- Success message -->
                   <div v-if="passwordSet" class="af-alert-success flex items-center justify-center p-4 mb-4 text-sm rounded-lg dark:text-white" role="alert">
-                    <div class="text-center">
+                    <div v-if="isUserLoggedIn === 'true'" class="text-center">
+                    <p>{{$t('Password set successfully to your new account')}}</p>
+                    <p class="font-bold">{{$t('Stay logged in or log in to another account?')}}</p>
+                    <div class="flex gap-4 w-full justify-between mt-3">
+                      <Button class="flex-1" @click="stayLoggedIn">{{ $t('Stay logged in') }}</Button>
+                      <Button class="flex-1" @click="logoutUser">{{ $t('Log out ') }}</Button>
+                    </div>
+                    </div>
+                    <div v-else class="text-center">
                       <p class="mb-3">{{$t('Password set successfully!')}}</p>
                       <Link to="/login" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
                         {{$t('Go to Login')}}
@@ -146,6 +154,7 @@
 <script setup lang="ts">
 import { onMounted, ref, computed, Ref } from 'vue';
 import { useCoreStore } from '@/stores/core';
+import { useUserStore } from '@/stores/user';
 import { callAdminForthApi, loadFile, applyRegexValidation } from '@/utils';
 import { useRoute, useRouter } from 'vue-router';
 import { IconEyeSolid, IconEyeSlashSolid } from '@iconify-prerendered/vue-flowbite';
@@ -157,6 +166,7 @@ const loading = ref(true);
 const tokenValid = ref(false);
 const passwordSet = ref(false);
 
+const userStore = useUserStore();
 const coreStore = useCoreStore();
 
 const passwordConfirmationInput = ref(null);
@@ -169,6 +179,8 @@ const router = useRouter();
 
 const validationRunning = ref(false);
 const error = ref(null);
+
+const isUserLoggedIn = localStorage.getItem('isAuthorized');
 
 const backgroundPosition = computed(() => {
   return coreStore.config?.loginBackgroundPosition || '1/2';
@@ -257,6 +269,21 @@ async function setPassword() {
   } else {
     error.value = null;
     passwordSet.value = true;
+  }
+}
+
+async function logoutUser() {
+  userStore.unauthorize();
+  await userStore.logout();
+  router.push({ name: 'login' })
+}
+
+function stayLoggedIn() {
+  coreStore.fetchMenuAndResource();
+  if (route.query.next) {
+    router.push(route.query.next.toString());
+  } else {
+    router.push({ name: 'home' });
   }
 }
 </script> 
