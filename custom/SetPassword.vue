@@ -37,14 +37,14 @@
                 <!-- Modal body -->
                 <div class="p-4 md:p-5">
                   <!-- Success message -->
-                  <div v-if="passwordSet" class="af-alert-success flex items-center justify-center py-4 mb-4 text-sm rounded-lg dark:text-white" role="alert">
+                  <div v-if="passwordSet" class="af-alert-success flex items-center justify-center pt-4 text-sm rounded-lg dark:text-white" role="alert">
                     <div v-if="isUserLoggedIn === 'true'" class="text-center w-full">
-                    <p>{{$t('Password set successfully to your new account')}}</p>
-                    <p class="font-bold">{{$t('Stay logged in or log in to another account?')}}</p>
-                    <div class="flex gap-4 w-full justify-between mt-3">
-                      <Button class="flex-1" @click="stayLoggedIn">{{ $t('Stay logged in') }}</Button>
-                      <Button class="flex-1" @click="logoutUser">{{ $t('Log out ') }}</Button>
-                    </div>
+                      <p class="text-start" >{{$t('Password set successfully to your new account')}}</p>
+                      <p class="text-start font-bold pb-4">{{$t('Stay logged in or log in to another account?')}}</p>
+                      <div class="flex gap-4 w-full justify-between mt-4">
+                        <Button class="flex-1" @click="stayLoggedIn">{{ $t('Stay logged in') }}</Button>
+                        <Button class="flex-1" @click="logoutUser">{{ $t('Log out ') }}</Button>
+                      </div>
                     </div>
                     <div v-else class="text-center">
                       <p class="mb-3">{{$t('Password set successfully!')}}</p>
