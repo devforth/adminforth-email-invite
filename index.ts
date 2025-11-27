@@ -249,7 +249,7 @@ export default class EmailInvitePlugin extends AdminForthPlugin {
           let userRecord;
           
           if (recordId) {
-            userRecord = await this.adminforth.resource(this.authResource.resourceId).get(recordId);
+            userRecord = await this.adminforth.resource(this.authResource.resourceId).get(Filters.EQ(this.authResource.columns.find(c => c.primaryKey).name, recordId));
           }
           
           if (!userRecord && email) {
