@@ -13,6 +13,10 @@ export default class EmailInvitePlugin extends AdminForthPlugin {
     this.options = options;
   }
 
+  shouldHaveSingleInstancePerWholeApp(): boolean {
+    return true;
+  }
+
   async modifyResourceConfig(adminforth: IAdminForth, resourceConfig: AdminForthResource) {
     super.modifyResourceConfig(adminforth, resourceConfig);
   
