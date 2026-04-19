@@ -304,7 +304,7 @@ export default class EmailInvitePlugin extends AdminForthPlugin {
     server.endpoint({
       method: 'POST',
       path: `/plugin/${this.pluginInstanceId}/resend-invite`,
-      handler: async ({ body, adminUser, extra }) => {
+      handler: async ({ body, adminUser }) => {
         const { recordId } = body;
         
         try {
@@ -321,7 +321,6 @@ export default class EmailInvitePlugin extends AdminForthPlugin {
             record: userRecord,
             adminUser,
             adminforth: this.adminforth,
-            extra
           });
 
           return { ok: true };
