@@ -13,7 +13,7 @@
     "email",
     "invite"
   ],
-  "author": "devforth",
+  "author": "DevForth (https://devforth.io)",
   "license": "MIT",
   "description": "Email invite plugin for adminforth",
   "devDependencies": {
