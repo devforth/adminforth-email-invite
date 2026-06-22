@@ -1,4 +1,4 @@
-import AdminForth, { AdminForthPlugin, suggestIfTypo, Filters } from "adminforth";
+import AdminForth, { AdminForthPlugin, suggestIfTypo, Filters, afLogger } from "adminforth";
 import type { IAdminForth, IHttpServer, AdminForthResourcePages, AdminForthResourceColumn, AdminForthDataTypes, AdminForthResource, AdminUser, HttpExtra } from "adminforth";
 import type { PluginOptions } from './types.js';
 
@@ -17,6 +17,10 @@ export default class EmailInvitePlugin extends AdminForthPlugin {
 
   async modifyResourceConfig(adminforth: IAdminForth, resourceConfig: AdminForthResource) {
     super.modifyResourceConfig(adminforth, resourceConfig);
+
+    if (!this.options.emailConfirmedField) {
+      afLogger.warn('emailConfirmedField is not set in EmailPasswordReset options. Invintation link can be re-user many times until for the 7d without any limits, so we recommend to setup this field to prevent security issues')
+    }
   
     if (!this.options.emailField) {
       throw new Error(`emailField is required and should be a name of field in auth resource`);
