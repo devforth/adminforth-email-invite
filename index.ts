@@ -1,6 +1,16 @@
-import AdminForth, { AdminForthPlugin, suggestIfTypo, Filters, afLogger } from "adminforth";
+import AdminForth, { AdminForthPlugin, parseBody, suggestIfTypo, Filters, afLogger } from "adminforth";
 import type { IAdminForth, IHttpServer, AdminForthResourcePages, AdminForthResourceColumn, AdminForthDataTypes, AdminForthResource, AdminUser, HttpExtra } from "adminforth";
 import type { PluginOptions } from './types.js';
+import { z } from "zod";
+
+const setPasswordBodySchema = z.object({
+  token: z.string(),
+  password: z.string(),
+}).strict();
+
+const resendInviteBodySchema = z.object({
+  recordId: z.union([z.string(), z.number()]),
+}).strict();
 
 export default class EmailInvitePlugin extends AdminForthPlugin {
   options: PluginOptions;
@@ -242,9 +252,12 @@ export default class EmailInvitePlugin extends AdminForthPlugin {
       method: 'POST',
       path: `/plugin/${this.pluginInstanceId}/set-password`,
       noAuth: true,
-      handler: async ({ body }) => {
-        const { token, password } = body;
-        
+      handler: async ({ body, response }) => {
+        const parsed = parseBody(setPasswordBodySchema, body, response);
+        if ('error' in parsed) return parsed.error;
+        const data = parsed.data;
+        const { token, password } = data;
+
         try {
           const decoded = await this.adminforth.auth.verify(token, 'inviteUser', false);
           if (!decoded || !decoded.inviteEmail) {
@@ -308,12 +321,15 @@ export default class EmailInvitePlugin extends AdminForthPlugin {
     server.endpoint({
       method: 'POST',
       path: `/plugin/${this.pluginInstanceId}/resend-invite`,
-      handler: async ({ body, adminUser }) => {
-        const { recordId } = body;
-        
+      handler: async ({ body, adminUser, response }) => {
+        const parsed = parseBody(resendInviteBodySchema, body, response);
+        if ('error' in parsed) return parsed.error;
+        const data = parsed.data;
+        const { recordId } = data;
+
         try {
           // Get the user record
-          const userRecord = await this.adminforth.resource(this.authResource.resourceId).get(recordId);
+          const userRecord = await this.adminforth.resource(this.authResource.resourceId).get(recordId as any);
           if (!userRecord) {
             return { error: 'User not found', ok: false };
           }
