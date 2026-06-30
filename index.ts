@@ -1,6 +1,16 @@
 import AdminForth, { AdminForthPlugin, suggestIfTypo, Filters, afLogger } from "adminforth";
 import type { IAdminForth, IHttpServer, AdminForthResourcePages, AdminForthResourceColumn, AdminForthDataTypes, AdminForthResource, AdminUser, HttpExtra } from "adminforth";
 import type { PluginOptions } from './types.js';
+import { z } from "zod";
+
+const setPasswordBodySchema = z.object({
+  token: z.string(),
+  password: z.string(),
+}).strict();
+
+const resendInviteBodySchema = z.object({
+  recordId: z.union([z.string(), z.number()]),
+}).strict();
 
 export default class EmailInvitePlugin extends AdminForthPlugin {
   options: PluginOptions;
@@ -12,6 +22,19 @@ export default class EmailInvitePlugin extends AdminForthPlugin {
     super(options, import.meta.url);
     this.options = options;
     this.shouldHaveSingleInstancePerWholeApp = () => true;
+  }
+
+  private parseBody<T>(
+    schema: z.ZodType<T>,
+    body: unknown,
+    response: { setStatus: (code: number, message: string) => void },
+  ): T | null {
+    const parsed = schema.safeParse(body ?? {});
+    if (!parsed.success) {
+      response.setStatus(422, parsed.error.message);
+      return null;
+    }
+    return parsed.data;
   }
 
 
@@ -242,9 +265,11 @@ export default class EmailInvitePlugin extends AdminForthPlugin {
       method: 'POST',
       path: `/plugin/${this.pluginInstanceId}/set-password`,
       noAuth: true,
-      handler: async ({ body }) => {
-        const { token, password } = body;
-        
+      handler: async ({ body, response }) => {
+        const data = this.parseBody(setPasswordBodySchema, body, response);
+        if (!data) return;
+        const { token, password } = data;
+
         try {
           const decoded = await this.adminforth.auth.verify(token, 'inviteUser', false);
           if (!decoded || !decoded.inviteEmail) {
@@ -308,12 +333,14 @@ export default class EmailInvitePlugin extends AdminForthPlugin {
     server.endpoint({
       method: 'POST',
       path: `/plugin/${this.pluginInstanceId}/resend-invite`,
-      handler: async ({ body, adminUser }) => {
-        const { recordId } = body;
-        
+      handler: async ({ body, adminUser, response }) => {
+        const data = this.parseBody(resendInviteBodySchema, body, response);
+        if (!data) return;
+        const { recordId } = data;
+
         try {
           // Get the user record
-          const userRecord = await this.adminforth.resource(this.authResource.resourceId).get(recordId);
+          const userRecord = await this.adminforth.resource(this.authResource.resourceId).get(recordId as any);
           if (!userRecord) {
             return { error: 'User not found', ok: false };
           }

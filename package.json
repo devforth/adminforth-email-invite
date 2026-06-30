@@ -16,6 +16,9 @@
   "author": "DevForth (https://devforth.io)",
   "license": "MIT",
   "description": "Email invite plugin for adminforth",
+  "dependencies": {
+    "zod": "^4.3.6"
+  },
   "devDependencies": {
     "@types/node": "^22.10.7",
     "adminforth": "^3.6.21",
