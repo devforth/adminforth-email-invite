@@ -1,4 +1,4 @@
-import AdminForth, { AdminForthPlugin, suggestIfTypo, Filters, afLogger } from "adminforth";
+import AdminForth, { AdminForthPlugin, parseBody, suggestIfTypo, Filters, afLogger } from "adminforth";
 import type { IAdminForth, IHttpServer, AdminForthResourcePages, AdminForthResourceColumn, AdminForthDataTypes, AdminForthResource, AdminUser, HttpExtra } from "adminforth";
 import type { PluginOptions } from './types.js';
 import { z } from "zod";
@@ -22,22 +22,6 @@ export default class EmailInvitePlugin extends AdminForthPlugin {
     super(options, import.meta.url);
     this.options = options;
     this.shouldHaveSingleInstancePerWholeApp = () => true;
-  }
-
-  private parseBody<T>(
-    schema: z.ZodType<T>,
-    body: unknown,
-    response: { setStatus: (code: number, message: string) => void },
-  ): { ok: true; data: T } | { ok: false; error: { error: string; details: unknown } } {
-    const parsed = schema.safeParse(body ?? {});
-    if (!parsed.success) {
-      response.setStatus(400, '');
-      return {
-        ok: false,
-        error: { error: 'Request body validation failed', details: parsed.error.issues },
-      };
-    }
-    return { ok: true, data: parsed.data };
   }
 
 
@@ -269,7 +253,7 @@ export default class EmailInvitePlugin extends AdminForthPlugin {
       path: `/plugin/${this.pluginInstanceId}/set-password`,
       noAuth: true,
       handler: async ({ body, response }) => {
-        const parsed = this.parseBody(setPasswordBodySchema, body, response);
+        const parsed = parseBody(setPasswordBodySchema, body, response);
         if ('error' in parsed) return parsed.error;
         const data = parsed.data;
         const { token, password } = data;
@@ -338,7 +322,7 @@ export default class EmailInvitePlugin extends AdminForthPlugin {
       method: 'POST',
       path: `/plugin/${this.pluginInstanceId}/resend-invite`,
       handler: async ({ body, adminUser, response }) => {
-        const parsed = this.parseBody(resendInviteBodySchema, body, response);
+        const parsed = parseBody(resendInviteBodySchema, body, response);
         if ('error' in parsed) return parsed.error;
         const data = parsed.data;
         const { recordId } = data;
