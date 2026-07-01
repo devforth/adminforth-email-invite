@@ -1,4 +1,4 @@
-import AdminForth, { AdminForthPlugin, parseBody, suggestIfTypo, Filters, afLogger } from "adminforth";
+import AdminForth, { AdminForthPlugin, suggestIfTypo, Filters, afLogger } from "adminforth";
 import type { IAdminForth, IHttpServer, AdminForthResourcePages, AdminForthResourceColumn, AdminForthDataTypes, AdminForthResource, AdminUser, HttpExtra } from "adminforth";
 import type { PluginOptions } from './types.js';
 import { z } from "zod";
@@ -252,10 +252,9 @@ export default class EmailInvitePlugin extends AdminForthPlugin {
       method: 'POST',
       path: `/plugin/${this.pluginInstanceId}/set-password`,
       noAuth: true,
+      request_schema: setPasswordBodySchema,
       handler: async ({ body, response }) => {
-        const parsed = parseBody(setPasswordBodySchema, body, response);
-        if ('error' in parsed) return parsed.error;
-        const data = parsed.data;
+        const data = body as z.infer<typeof setPasswordBodySchema>;
         const { token, password } = data;
 
         try {
@@ -321,10 +320,9 @@ export default class EmailInvitePlugin extends AdminForthPlugin {
     server.endpoint({
       method: 'POST',
       path: `/plugin/${this.pluginInstanceId}/resend-invite`,
+      request_schema: resendInviteBodySchema,
       handler: async ({ body, adminUser, response }) => {
-        const parsed = parseBody(resendInviteBodySchema, body, response);
-        if ('error' in parsed) return parsed.error;
-        const data = parsed.data;
+        const data = body as z.infer<typeof resendInviteBodySchema>;
         const { recordId } = data;
 
         try {
