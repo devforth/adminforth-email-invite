@@ -5,6 +5,10 @@
   "types": "dist/index.d.ts",
   "type": "module",
   "homepage": "https://adminforth.dev/docs/tutorial/Plugins/email-invite/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/devforth/adminforth-email-invite.git"
+  },
   "scripts": {
     "build": "tsc && rsync -av --exclude 'node_modules' custom dist/"
   },
