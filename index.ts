@@ -2,6 +2,7 @@ import AdminForth, { AdminForthPlugin, suggestIfTypo, Filters, afLogger } from "
 import type { IAdminForth, IHttpServer, AdminForthResourcePages, AdminForthResourceColumn, AdminForthDataTypes, AdminForthResource, AdminUser, HttpExtra } from "adminforth";
 import type { PluginOptions } from './types.js';
 import { z } from "zod";
+import { randomUUID } from "crypto";
 
 const setPasswordBodySchema = z.object({
   token: z.string(),
@@ -151,7 +152,7 @@ export default class EmailInvitePlugin extends AdminForthPlugin {
       }
 
       const passwordHashFieldName = adminforth.config.auth!.passwordHashField;
-      record[passwordHashFieldName] = await AdminForth.Utils.generatePasswordHash('TEMP_INVITE_PLACEHOLDER_' + Date.now());
+      record[passwordHashFieldName] = await AdminForth.Utils.generatePasswordHash('TEMP_INVITE_PLACEHOLDER_' + randomUUID());
 
       if (this.options.emailConfirmedField && this.emailConfirmedField) {
         record[this.emailConfirmedField.name] = false;
