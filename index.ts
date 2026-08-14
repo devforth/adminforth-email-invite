@@ -2,7 +2,7 @@ import AdminForth, { AdminForthPlugin, suggestIfTypo, Filters, afLogger } from "
 import type { IAdminForth, IHttpServer, AdminForthResourcePages, AdminForthResourceColumn, AdminForthDataTypes, AdminForthResource, AdminUser, HttpExtra } from "adminforth";
 import type { PluginOptions } from './types.js';
 import { z } from "zod";
-import { randomUUID } from "crypto";
+import { createHash, randomUUID } from "crypto";
 
 const setPasswordBodySchema = z.object({
   token: z.string(),
@@ -138,6 +138,11 @@ export default class EmailInvitePlugin extends AdminForthPlugin {
     return `single`;
   }
 
+  passwordHashDigest(passwordHash: string | null | undefined): string {
+    return createHash('sha256').update(passwordHash || '').digest('hex').slice(0, 16);
+  }
+
+
   async handleUserCreation({ resource, adminUser, record, adminforth, extra }: {
     resource: AdminForthResource;
     adminUser: AdminUser;
@@ -175,6 +180,7 @@ export default class EmailInvitePlugin extends AdminForthPlugin {
   }): Promise<{ok: boolean, error?: string}> {
     try {
       const email = record[this.options.emailField];
+      const newRecordId = record[this.authResource.columns.find(col => col.primaryKey)!.name];
       
       if (!email || !/\S+@\S+\.\S+/.test(email)) {
         console.warn('Email invite plugin: Invalid or missing email address');
@@ -182,15 +188,17 @@ export default class EmailInvitePlugin extends AdminForthPlugin {
       }
 
       const brandName = adminforth.config.customization.brandName || 'Admin Panel';
-      
+
        const inviteToken = adminforth.auth.issueJWT(
-         { email, recordId, inviteEmail: true }, 
+         { 
+          email, 
+          recordId: newRecordId,
+          inviteEmail: true,
+          ph: this.passwordHashDigest(record[this.adminforth.config.auth.passwordHashField])
+        }, 
          'inviteUser', 
          '7d' // 7 days validity
        );
-
-       console.log('Sending invite email to:', email);
-       console.log('Generated JWT token payload:', { email, recordId, inviteEmail: true });
 
        const host = extra?.headers?.host || 'localhost';
        const protocol = extra?.headers?.['x-forwarded-proto'] || 'http';
@@ -271,6 +279,10 @@ export default class EmailInvitePlugin extends AdminForthPlugin {
             userRecord = await this.adminforth.resource(this.authResource.resourceId).get(Filters.EQ(this.authResource.columns.find(c => c.primaryKey).name, recordId));
           }
           
+          if (decoded.ph !== this.passwordHashDigest(userRecord[this.adminforth.config.auth.passwordHashField])) {
+            return { error: 'Token has already been used', ok: false };
+          }
+
           if (!userRecord && email) {
             const records = await this.adminforth.resource(this.authResource.resourceId).list(
               Filters.EQ(this.options.emailField, email),
@@ -282,7 +294,7 @@ export default class EmailInvitePlugin extends AdminForthPlugin {
             return { error: 'User not found', ok: false };
           }
 
-          if ( userRecord[this.options.emailConfirmedField] ) {
+          if ( this.options.emailConfirmedField && userRecord[this.options.emailConfirmedField] ) {
             return { error: 'Password already set. Invitation link cannot be reused.', ok: false };
           }
           const userEmail = userRecord[this.options.emailField];
