@@ -282,7 +282,7 @@ export default class EmailInvitePlugin extends AdminForthPlugin {
           if (decoded.ph !== this.passwordHashDigest(userRecord[this.adminforth.config.auth.passwordHashField])) {
             return { error: 'Token has already been used', ok: false };
           }
-
+ 
           if (!userRecord && email) {
             const records = await this.adminforth.resource(this.authResource.resourceId).list(
               Filters.EQ(this.options.emailField, email),
