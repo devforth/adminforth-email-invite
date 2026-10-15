@@ -38,14 +38,14 @@
             <Spinner class="w-8 h-8" />
           </div>
 
-          <p v-else-if="!tokenValid" role="alert" class="af-alert-error flex items-start gap-2.5 rounded-[10px] border border-red-200 bg-red-50 px-3.5 py-3 text-[13px] leading-[19px] text-red-800 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">
-            <IconExclamationCircleOutline class="w-[18px] h-[18px] shrink-0" />
+          <p v-else-if="!tokenValid" role="alert" class="af-alert-error flex items-start gap-2.5 rounded-lg border border-red-200 bg-red-50 px-3.5 py-3 text-sm leading-5 text-red-800 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">
+            <IconExclamationCircleOutline class="w-5 h-5 shrink-0" />
             {{ $t('This invitation link is invalid or has expired. Ask your administrator to send a new one.') }}
           </p>
 
           <template v-else-if="passwordSet">
-            <p role="status" class="af-alert-success flex items-start gap-2.5 rounded-[10px] border border-green-200 bg-green-50 px-3.5 py-3 text-[13px] leading-[19px] text-green-800 dark:border-green-500/30 dark:bg-green-500/10 dark:text-green-300">
-              <IconCheckCircleOutline class="w-[18px] h-[18px] shrink-0" />
+            <p role="status" class="af-alert-success flex items-start gap-2.5 rounded-lg border border-green-200 bg-green-50 px-3.5 py-3 text-sm leading-5 text-green-800 dark:border-green-500/30 dark:bg-green-500/10 dark:text-green-300">
+              <IconCheckCircleOutline class="w-5 h-5 shrink-0" />
               {{ isUserLoggedIn ? $t('Password set successfully to your new account.') : $t('Password set successfully! Log in with your email and the new password.') }}
             </p>
             <p v-if="isUserLoggedIn" class="text-sm text-gray-700 dark:text-gray-300">
