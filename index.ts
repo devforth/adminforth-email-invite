@@ -260,6 +260,7 @@ export default class EmailInvitePlugin extends AdminForthPlugin {
     server.endpoint({
       method: 'POST',
       path: `/plugin/${this.pluginInstanceId}/set-password`,
+      agent: { hiddenFromAgents: true },
       noAuth: true,
       request_schema: setPasswordBodySchema,
       handler: async ({ body, response }) => {
@@ -333,6 +334,7 @@ export default class EmailInvitePlugin extends AdminForthPlugin {
     server.endpoint({
       method: 'POST',
       path: `/plugin/${this.pluginInstanceId}/resend-invite`,
+      agent: { hiddenFromAgents: true },
       request_schema: resendInviteBodySchema,
       handler: async ({ body, adminUser, response }) => {
         const data = body as z.infer<typeof resendInviteBodySchema>;
