@@ -212,7 +212,7 @@ const validationError = computed(() => {
 
 onMounted(async () => {
   loading.value = true;
-  await coreStore.getPublicConfig();
+  await coreStore.fetchConfig({ redirectToLoginIfNotLoggedIn: false });
 
   // Check if token is present and valid
   const token = route.query.token;
