@@ -18,6 +18,8 @@ export default class EmailInvitePlugin extends AdminForthPlugin {
   authResource!: AdminForthResource;
   emailField!: AdminForthResourceColumn;
   emailConfirmedField?: AdminForthResourceColumn;
+  passwordHashField!: string;
+  primaryKeyColumn!: AdminForthResourceColumn;
 
   constructor(options: PluginOptions) {
     super(options, import.meta.url);
@@ -54,6 +56,8 @@ export default class EmailInvitePlugin extends AdminForthPlugin {
       throw new Error(`Resource with id config.auth.usersResourceId=${adminforth.config.auth!.usersResourceId} not found`);
     }
     this.authResource = authResource;
+    this.passwordHashField = adminforth.config.auth.passwordHashField;
+    this.primaryKeyColumn = authResource.columns.find(c => c.primaryKey)!;
 
     const emailField = authResource.columns.find(f => f.name === this.options.emailField);
     if (!emailField) {
@@ -156,8 +160,7 @@ export default class EmailInvitePlugin extends AdminForthPlugin {
         delete record.password;
       }
 
-      const passwordHashFieldName = adminforth.config.auth!.passwordHashField;
-      record[passwordHashFieldName] = await AdminForth.Utils.generatePasswordHash('TEMP_INVITE_PLACEHOLDER_' + randomUUID());
+      record[this.passwordHashField] = await AdminForth.Utils.generatePasswordHash('TEMP_INVITE_PLACEHOLDER_' + randomUUID());
 
       if (this.options.emailConfirmedField && this.emailConfirmedField) {
         record[this.emailConfirmedField.name] = false;
@@ -180,7 +183,7 @@ export default class EmailInvitePlugin extends AdminForthPlugin {
   }): Promise<{ok: boolean, error?: string}> {
     try {
       const email = record[this.options.emailField];
-      const newRecordId = record[this.authResource.columns.find(col => col.primaryKey)!.name];
+      const newRecordId = record[this.primaryKeyColumn.name];
       
       if (!email || !/\S+@\S+\.\S+/.test(email)) {
         console.warn('Email invite plugin: Invalid or missing email address');
@@ -194,7 +197,7 @@ export default class EmailInvitePlugin extends AdminForthPlugin {
           email, 
           recordId: newRecordId,
           inviteEmail: true,
-          ph: this.passwordHashDigest(record[this.adminforth.config.auth.passwordHashField])
+          ph: this.passwordHashDigest(record[this.passwordHashField])
         }, 
          'inviteUser', 
          '7d' // 7 days validity
@@ -277,10 +280,10 @@ export default class EmailInvitePlugin extends AdminForthPlugin {
           let userRecord;
           
           if (recordId) {
-            userRecord = await this.adminforth.resource(this.authResource.resourceId).get(Filters.EQ(this.authResource.columns.find(c => c.primaryKey).name, recordId));
+            userRecord = await this.adminforth.resource(this.authResource.resourceId).get(Filters.EQ(this.primaryKeyColumn.name, recordId));
           }
           
-          if (decoded.ph !== this.passwordHashDigest(userRecord[this.adminforth.config.auth.passwordHashField])) {
+          if (decoded.ph !== this.passwordHashDigest(userRecord[this.passwordHashField])) {
             return { error: 'Token has already been used', ok: false };
           }
 
@@ -305,14 +308,12 @@ export default class EmailInvitePlugin extends AdminForthPlugin {
             return { error: 'Email mismatch', ok: false };
           }
 
-          const passwordHashFieldName = this.adminforth.config.auth.passwordHashField;
           const newPasswordHash = await AdminForth.Utils.generatePasswordHash(password);
           
-          const primaryKeyField = this.authResource.columns.find(c => c.primaryKey);
-          const userRecordId = userRecord[primaryKeyField!.name];
+          const userRecordId = userRecord[this.primaryKeyColumn.name];
           
           const updateData: any = { 
-            [passwordHashFieldName]: newPasswordHash 
+            [this.passwordHashField]: newPasswordHash 
           };
 
           if (this.options.emailConfirmedField && this.emailConfirmedField) {
